@@ -1,32 +1,176 @@
-{% for block in section.blocks %}
-	{% case block.type %}
-		{% when 'article_title' %}
-			<h1>{{ article.title }}</h1>
+<article class="py-8">
+	{% for block in section.blocks %}
+		{% case block.type %}
+			{% when 'article_title' %}
+				<div class="flex items-center justify-center">
+					<div class="max-w-7xl text-center">
+						<a
+							href="{{ blog.url }}"
+							title="{{ blog.title }}"
+							class="text-base uppercase text-gray-500 hover:text-gray-900 font-bold"
+						>
+							{{ blog.title }}
+						</a>
+						<h1 class="text-4xl md:text-6xl font-medium">{{ article.title }}</h1>
+					</div>
+				</div>
 
-		{% when 'article_author' %}
-			{% if section.settings.enable_author %}
-				<small>{{ article.author }}</small>
-			{% endif %}
+			{% when 'article_author' %}
+				<div class="flex items-center justify-center">
+					<div class="max-w-7xl text-center">
+						{% if section.settings.enable_author %}
+							<small>{{ article.author }}</small>
+						{% endif %}
+					</div>
+				</div>
 
-		{% when 'article_published_date' %}
-			{% if section.settings.enable_published_date %}
-				<time datetime="{{ article.published_at | date: '%Y-%m-%d' }}">
-					{{- article.published_at | date: '%Y-%m-%d' -}}
-				</time>
-			{% endif %}
+			{% when 'article_published_date' %}
+				<div class="flex items-center justify-center">
+					<div class="max-w-7xl text-center">
+						{% if section.settings.enable_published_date %}
+							<time datetime="{{ article.published_at | date: '%Y-%m-%d' }}">
+								{{- article.published_at | date: format: 'on_date' -}}
+							</time>
+						{% endif %}
+					</div>
+				</div>
 
-		{% when 'article_featured_image' %}
-			<img src="{{ article.image | img_url: 'large' }}" alt="{{ article.image.alt }}">
+			{% when 'article_featured_image' %}
+				<div class="block max-w-7xl bg-blue-100 rounded-lg mx-2 md:mx-auto overflow-hidden my-4">
+					{% if article.image != blank %}
+						<img
+							src="{{ article.image | img_url: 'large' }}"
+							alt="{{ article.image.alt }}"
+							class="w-full h-80 md:h-96 object-cover object-center"
+						>
+					{% else %}
+						{% assign placeholder_image = block.settings.image_placeholder %}
+						{{
+							placeholder_image
+							| placeholder_svg_tag: 'w-full h-80 md:h-96 object-cover object-center p-5'
+						}}
+					{% endif %}
+				</div>
 
-		{% when 'article_content' %}
-			<div>
-				{{ article.content }}
+			{% when 'article_content' %}
+				<div class="flex items-center justify-center">
+					<div class="max-w-5xl">
+						{{ article.content }}
+					</div>
+				</div>
+
+			{% else %}
+
+		{% endcase %}
+	{% endfor %}
+</article>
+
+{% if blog.comments_enabled? %}
+	<div id="comments" class="my-8">
+		{% if article.comments_count > 0 %}
+			<div class="flex-1 items-center justify-center mx-auto max-w-4xl px-4">
+				<h2 class="text-lg mb-4 font-medium">See what people are saying</h2>
+				{% paginate article.comments by 5 %}
+					{% for comment in article.comments %}
+						<div class="flex items-center justify-center mb-4">
+							<div class="flex-1">
+								<p class="comment-author text-gray-700 font-medium">{{ comment.author }}</p>
+								<p class="text-gray-500 text-sm">{{ comment.created_at | date: format: 'default' }}</p>
+								<p class="text-sm">{{ comment.content }}</p>
+							</div>
+						</div>
+					{% endfor %}
+					{% if paginate.pages > 1 %}
+						{{ paginate | default_pagination }}
+					{% endif %}
+				{% endpaginate %}
 			</div>
-
 		{% else %}
+			<p>There are no comments in this article yet.</p>
+		{% endif %}
+	</div>
 
-	{% endcase %}
-{% endfor %}
+	<div id="comment_form" class="mb-8">
+		{% form 'new_comment', article %}
+			<div class="flex-1 mx-auto items-center justify-center max-w-4xl px-4">
+				{% if form.errors %}
+					<div class="border p-5">
+						<div class="flex flex-row items-center w-full my-3">
+							<div class="text-red-500">
+								{% render 'icon-failed' %}
+							</div>
+							<div class="text-sm fond-medium ml-3">
+								Oh no! There was an error submitting your comment. Please try again.
+							</div>
+						</div>
+						<ul class="px-4 mb-3 ml-7 list-decimal">
+							{% for error in form.errors %}
+								<li>{{ form.errors.messages[error] }}</li>
+							{% endfor %}
+						</ul>
+					</div>
+				{% elsif form.posted_successfully? %}
+					<div class="flex flex-row items-center w-full my-3 p-5">
+						<div class="text-green-500">
+							{% render 'icon-success' %}
+						</div>
+						<div class="text-sm font-medium ml-3">Comment is posted successfully</div>
+					</div>
+				{% endif %}
+				<div class="px-1 md:flex mb-3">
+					<div class="px-3 md:w-1/2">
+						<label for="comment_author" class="text-gray-700 font-medium uppercase text-xs mb-2"
+							>Name</label
+						>
+						<input
+							type="text"
+							name="comment[author]"
+							id="comment_author"
+							class="w-full text-gray-700 border py-3 px-4 mb-3 focus:outline-none"
+							placeholder="Jane Doe"
+							required
+						>
+					</div>
+					<div class="px-3 md:w-1/2">
+						<label for="comment_email" class="text-gray-700 font-medium uppercase text-xs mb-2"
+							>Email</label
+						>
+						<input
+							type="email"
+							name="comment[email]"
+							id="comment_email"
+							class="w-full text-gray-700 border py-3 px-4 mb-3 focus:outline-none"
+							placeholder="jane@doe.com"
+							required
+						>
+					</div>
+				</div>
+				<div class="px-1 md:flex mb-3">
+					<div class="md:w-full px-3">
+						<label for="comment_content" class="text-gray-700 font-medium uppercase text-xs mb-2"
+							>Comment</label
+						>
+						<textarea
+							name="comment[body]"
+							id="comment_content"
+							class="w-full text-gray-700 border resize-none h-20 py-2 px-3 focus:outline-none"
+							required
+						></textarea>
+					</div>
+				</div>
+				<div class="px-1 md:flex mb-3">
+					<div class="md:w-full px-3">
+						<input
+							type="submit"
+							value="Post Comment"
+							class="w-full cursor-pointer px-4 py-2 border text-base fond-medium text-white bg-gray-900 hover:bg-gray-500"
+						>
+					</div>
+				</div>
+			</div>
+		{% endform %}
+	</div>
+{% endif %}
 
 {% schema %}
 {
@@ -64,7 +208,20 @@
 		{
 			"type": "article_featured_image",
 			"name": "Featured Image",
-			"limit": 1
+			"limit": 1,
+			"settings": [
+				{
+					"type": "select",
+					"id": "image_placeholder",
+					"label": "Placeholder image",
+					"default": "lifestyle-1",
+					"options": [
+						{ "value": "lifestyle-1", "label": "Lifestyle 1" },
+						{ "value": "lifestyle-2", "label": "Lifestyle 2" }
+					],
+					"info": "Select a placeholder image to display when no image is uploaded"
+				}
+			]
 		},
 		{
 			"type": "article_content",
