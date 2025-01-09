@@ -1,0 +1,54 @@
+{% comment %} <h1>{{ 'general.404.title' | t }}</h1>
+<p>{{ 'general.404.subtext_html' | t }}</p> {% endcomment %}
+
+<div class="flex items-center justify-center text-center py-7 h-screen">
+    <div class="max-w-md mx-auto">
+        <div class="text-5xl font-bold my-4">
+            <h1>{{ section.settings.title }}</h1>
+        </div>
+        <div class="my-4">
+            <p class="text-base md:text-xl leading-normal">{{ section.settings.subtext }}</p>
+        </div>
+        {% if section.settings.button_url == blank %}
+            {% assign shop_url = shop.secure_url %}
+        {% else %}
+            {% assign shop_url = section.settings.button_url %}
+        {% endif %}
+        <div class="my-4">
+            <a href="{{ shop_url }}" class="px-4 inline py-2 text-base font-medium rounded-full bg-green-600 hover:bg-green-800 text-white">{{ section.settings.button_label }}</a>
+        </div>
+    </div>
+</div>
+
+{% schema %}
+    {
+        "name": "Template 404",
+        "tag": "section",
+        "class": "notfound-section",
+        "settings": [
+            {
+                "type": "text",
+                "id": "title",
+                "default": "404",
+                "label": "404 Heading Title"
+            },
+            {
+                "type": "text",
+                "id": "subtext",
+                "default": "The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.",
+                "label": "404 Subtext Title"
+            },
+            {
+                "type": "text",
+                "id": "button_label",
+                "default": "Back to homepage",
+                "label": "Button Label"
+            },
+            {
+                "type": "url",
+                "id": "button_url",
+                "label": "Button URL"
+            }
+        ]
+    }
+{% endschema %}
